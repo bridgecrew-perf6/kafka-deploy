@@ -3,28 +3,61 @@ kind: Deployment
 metadata:
   name: {{ template "kafka.fullname" . }}-topic-operator
   labels:
-    app: {{ template "kafka.name" . }}
+    app: {{ template "kafka.name" . }}-topic-operator
     chart: {{ template "kafka.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  selector:
+    matchLabels:
+      app: {{ template "kafka.name" . }}-topic-operator
+      release: {{ .Release.Name }}
+  strategy:
+    type: Recreate
   template:
+    metadata:
+      labels:
+        app: {{ template "kafka.name" . }}-topic-operator
+        release: {{ .Release.Name }}
     spec:
       containers:
-        - name: {{ template "kafka.fullname" . }}-topic-operator
+        - name: {{ template "kafka.name" . }}-topic-operator
+          image: quay.io/strimzi/operator:0.28.0
+          args:
+          - /opt/strimzi/bin/topic_operator_run.sh
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            limits:
+              memory: 96Mi
+              cpu: 100m
+            requests:
+              memory: 96Mi
+              cpu: 100m
           env:
             - name: STRIMZI_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+        #      #helper template
             - name: STRIMZI_KAFKA_BOOTSTRAP_SERVERS
-              value: kafka:9092 #helper template
+              value: "kafka:9092"
             - name: STRIMZI_RESOURCE_LABELS
-              value: "strimzi.io/cluster="{{ template "kafka.fullname" . }}
-            # - name: STRIMZI_ZOOKEEPER_CONNECT (4)
-            #   value: my-cluster-zookeeper-client:2181
-            # - name: STRIMZI_ZOOKEEPER_SESSION_TIMEOUT_MS (5)
-            #   value: "18000"
+              value: "strimzi.io/cluster={{ template "kafka.fullname" . }}"
+        #     # - name: STRIMZI_ZOOKEEPER_CONNECT (4)
+        #     #   value: my-cluster-zookeeper-client:2181
+        #     # - name: STRIMZI_ZOOKEEPER_SESSION_TIMEOUT_MS (5)
+        #     #   value: "18000"
             - name: STRIMZI_FULL_RECONCILIATION_INTERVAL_MS
               value: "120000"
             - name: STRIMZI_TOPIC_METADATA_MAX_ATTEMPTS
@@ -35,19 +68,19 @@ spec:
               value: "false"
             - name: STRIMZI_JAVA_OPTS
               value: "-Xmx=512M -Xms=256M"
-            # - name: STRIMZI_JAVA_SYSTEM_PROPERTIES
-            #   value: "-Djavax.net.debug=verbose -DpropertyName=value"
+        #     # - name: STRIMZI_JAVA_SYSTEM_PROPERTIES
+        #     #   value: "-Djavax.net.debug=verbose -DpropertyName=value"
             - name: STRIMZI_PUBLIC_CA
               value: "false"
             - name: STRIMZI_TLS_AUTH_ENABLED
               value: "false"
             - name: STRIMZI_SASL_ENABLED
               value: "false"
-            # - name: STRIMZI_SASL_USERNAME (15)
-            #   value: "admin"
-            # - name: STRIMZI_SASL_PASSWORD (16)
-            #   value: "password"
-            # - name: STRIMZI_SASL_MECHANISM (17)
-            #   value: "scram-sha-512"
-            # - name: STRIMZI_SECURITY_PROTOCOL (18)
-            #   value: "SSL"
+        #     # - name: STRIMZI_SASL_USERNAME (15)
+        #     #   value: "admin"
+        #     # - name: STRIMZI_SASL_PASSWORD (16)
+        #     #   value: "password"
+        #     # - name: STRIMZI_SASL_MECHANISM (17)
+        #     #   value: "scram-sha-512"
+        #     # - name: STRIMZI_SECURITY_PROTOCOL (18)
+        #     #   value: "SSL"
