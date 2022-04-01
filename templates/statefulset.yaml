@@ -146,17 +146,6 @@ spec:
         - name: KAFKA_JMX_PORT
           value: "{{ .Values.jmx.port }}"
         {{- end }}
-        # This is required because the Downward API does not yet support identification of
-        # pod numbering in statefulsets. Thus, we are required to specify a command which
-        # allows us to extract the pod ID for usage as the Kafka Broker ID.
-        # See: https://github.com/kubernetes/kubernetes/issues/31218
-        # command:
-        # - sh
-        # - -exc
-        # - |
-        #   export KAFKA_BROKER_ID=${HOSTNAME##*-} && \
-        #   export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${POD_NAME}.{{ template "kafka.fullname" . }}-headless.${POD_NAMESPACE}:9092{{ include "kafka.configuration.advertised.listeners" . }} && \
-        #   exec /etc/confluent/docker/run
         volumeMounts:
         {{- if .Values.persistence.enabled }}
           {{- $disksPerBroker := .Values.persistence.disksPerBroker | int }}
