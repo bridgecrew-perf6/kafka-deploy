@@ -1,4 +1,4 @@
-# Default values for kafka.
+# Default values for cp-kafka.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -10,7 +10,7 @@
 brokers: 1
 
 ## Image Info
-## ref: https://hub.docker.com/r/confluentinc/server/
+## ref: https://hub.docker.com/r/confluentinc/cp-server/
 image: debezium/kafka
 imageTag: 1.7.0.Final
 
@@ -146,9 +146,9 @@ nodeport:
 ## ------------------------------------------------------
 ## Zookeeper
 ## ------------------------------------------------------
-zookeeper:
-  ## If true, install the zookeeper chart alongside kafka
-  ## ref: ../zookeeper
+cp-zookeeper:
+  ## If true, install the cp-zookeeper chart alongside cp-kafka
+  ## ref: ../cp-zookeeper
   enabled: false
   servers: 1
   persistence:
