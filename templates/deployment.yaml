@@ -158,9 +158,9 @@ spec:
             - name: KAFKA_CONTROLLER_QUORUM_VOTERS
               value: "{{ .Values.brokerId}}@{{include "kafka.kafka-headless.fullname" .}}:9093"
             - name: KAFKA_CLUSTER_ID
-              value: {{ .Values.kafkaQourum.clusterId}}
+              value: {{ .Values.kafkaQourum.clusterId | quote}}
             - name: KAFKA_BROKER_ID
-              value: {{ .Values.brokerId}}
+              value: {{ .Values.brokerId | quote}}
             {{- end }}
             - name: KAFKA_LOG_DIRS
               value: {{ include "kafka.log.dirs" . | quote }}
