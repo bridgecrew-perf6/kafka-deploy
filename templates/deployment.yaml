@@ -57,7 +57,7 @@ spec:
                     operator: In
                     values:
                     - {{ .Release.Name }}
-            topologyKey: "kubernetes.io/hostname"
+              topologyKey: "kubernetes.io/hostname"
       {{- end }}
       {{- if .Values.nodeSelector }}
       nodeSelector:
