@@ -1,0 +1,269 @@
+{{- if .Capabilities.APIVersions.Has "apps/v1" }}
+apiVersion: apps/v1
+{{- else }}
+apiVersion: apps/v1beta1
+{{- end }}
+kind: Deployment
+metadata:
+  name: {{ template "kafka.fullname" . }}
+  labels:
+    app: {{ template "kafka.name" . }}
+    chart: {{ template "kafka.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+  {{- range $key, $value := .Values.annotations }}
+    {{ $key | quote }}: {{ $value | quote }}
+  {{- end }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "kafka.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: kafka
+  updateStrategy: 
+    {{- toYaml . | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "kafka.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: kafka
+    annotations:
+    {{- range $key, $value := .Values.podAnnotations }}
+      {{ $key | quote }}: {{ $value | quote }}
+    {{- end }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      affinity:
+      {{- if .Values.affinity }}
+        {{ toYaml .Values.affinity | indent 8 }}
+      {{- else }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                    - {{ template "kafka.name" . }}
+                  - key: "release"
+                    operator: In
+                    values:
+                    - {{ .Release.Name }}
+            topologyKey: "kubernetes.io/hostname"
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+      serviceAccountName: {{ include "kafka.serviceAccountName" . }}
+      containers:
+        {{- if .Values.prometheus.jmx.enabled }}
+        - name: prometheus-jmx-exporter
+          image: "{{ .Values.prometheus.jmx.image }}:{{ .Values.prometheus.jmx.imageTag }}"
+          imagePullPolicy: "{{ .Values.prometheus.jmx.imagePullPolicy }}"
+          command:
+          - java
+          - -XX:+UnlockExperimentalVMOptions
+          - -XX:+UseCGroupMemoryLimitForHeap
+          - -XX:MaxRAMFraction=1
+          - -XshowSettings:vm
+          - -jar
+          - jmx_prometheus_httpserver.jar
+          - {{ .Values.prometheus.jmx.port | quote }}
+          - /etc/jmx-kafka/jmx-kafka-prometheus.yml
+          ports:
+          - containerPort: {{ .Values.prometheus.jmx.port }}
+          resources:
+{{ toYaml .Values.prometheus.jmx.resources | indent 12 }}
+          volumeMounts:
+          - name: jmx-config
+            mountPath: /etc/jmx-kafka
+        {{- end }}
+        - name: {{ template "kafka.name" . }}-broker
+          image: "{{ .Values.image }}:{{ .Values.imageTag }}"
+          imagePullPolicy: "{{ .Values.imagePullPolicy }}"
+          {{- if .Values.securityContext }}
+          securityContext: {{- toYaml .Values.securityContext | nindent 10 }}
+          {{- end }}
+          ports:
+          - containerPort: 9092
+            name: kafka
+          {{- if .Values.prometheus.jmx.enabled }}
+          - containerPort: {{ .Values.jmx.port }}
+            name: jmx
+          {{- end }}
+          {{- if .Values.nodeport.enabled }}
+            {{- $brokers := .Values.brokers | int }}
+            {{- $root := . }}
+            {{- range $i, $e := until $brokers }}
+          - containerPort: {{ add $root.Values.nodeport.firstListenerPort $i }}
+            name: nodeport-{{ $i }}
+            {{- end }}
+          {{- end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: KAFKA_HEAP_OPTS
+              value: {{ .Values.heapOptions }}
+            {{- if .Values.zookeeper.enabled }}
+            - name: KAFKA_ZOOKEEPER_CONNECT
+              value: {{- toYaml  (join "," .Values.externalZookeeper.servers)}}
+            {{- if and .Values.zookeeper.auth.enabled .Values.auth.sasl.jaas.zookeeperUser }}
+            - name: KAFKA_ZOOKEEPER_PROTOCOL
+              value: "SASL"
+            - name: KAFKA_ZOOKEEPER_USER
+              value: {{ .Values.auth.sasl.jaas.zookeeperUser | quote }}
+            - name: KAFKA_ZOOKEEPER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kafka.jaasSecretName" . }}
+                  key: zookeeper-password
+            {{- end }}
+            {{- end }}
+            {{- if .Values.kafkaQourum.enabled }}
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: "{{ .Values.kafkaQourum.brokerId}}@{{include "kafka.kafka-headless.fullname" .}}:9093"
+            - name: KAFKA_CLUSTER_ID
+              values: {{ .Values.kafkaQourum.clusterId}}
+            - name: KAFKA_BROKER_ID
+              values: {{ .Values.kafkaQourum.brokerId}}
+            {{- end }}
+            - name: KAFKA_LOG_DIRS
+              value: {{ include "kafka.log.dirs" . | quote }}
+            {{- if .Values.jmx.port }}
+            - name: KAFKA_JMX_PORT
+              value: "{{ .Values.jmx.port }}"
+            {{- end }}
+            {{- range $key, $value := .Values.configurationOverrides }}
+            - name: {{ printf "KAFKA_%s" $key | replace "." "_" | upper | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $key, $value := .Values.customEnv }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- if or .Values.extraEnvVarsCM .Values.extraEnvVarsSecret }}
+            #   envFrom:
+            #     {{- if .Values.extraEnvVarsCM }}
+            #     - configMapRef:
+            #         name: {{ include "common.tplvalues.render" (dict "value" .Values.extraEnvVarsCM "context" $) }}
+            #     {{- end }}
+            #     {{- if .Values.extraEnvVarsSecret }}
+            #     - secretRef:
+            #         name: {{ include "common.tplvalues.render" (dict "value" .Values.extraEnvVarsSecret "context" $) }}
+            #     {{- end }}
+            #   {{- end }}
+          {{- if not .Values.diagnosticMode.enabled }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe: {{ toYaml (omit .Values.livenessProbe "enabled") | nindent 12 }}
+            tcpSocket:
+              port: kafka-client
+          {{- else if .Values.customLivenessProbe }}
+          livenessProbe: {{ toYaml .Values.customLivenessProbe | nindent 12 }}}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe: {{ toYaml (omit .Values.readinessProbe "enabled") | nindent 12 }}
+            tcpSocket:
+              port: kafka
+          {{- else if .Values.customReadinessProbe }}
+          readinessProbe: {{ toYaml .Values.customReadinessProbe | nindent 12 }}}
+          {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe: {{ toYaml (omit .Values.startupProbe "enabled") | nindent 12 }}
+            tcpSocket:
+              port: kafka
+          {{- else if .Values.customStartupProbe }}
+          startupProbe: {{ toYaml .Values.customStartupProbe | nindent 12 }}}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.lifecycleHooks }}
+          lifecycle: {{ toYaml .Values.lifecycleHooks | nindent 12 }}}
+          {{- end }}
+          volumeMounts:
+          {{- if .Values.persistence.enabled }}
+            {{- $disksPerBroker := .Values.persistence.disksPerBroker | int }}
+            {{- range $k, $e := until $disksPerBroker }}
+            - name: datadir-{{$k}}
+              mountPath: /opt/kafka/data-{{$k}}
+            {{- end }}
+          {{- end }}
+      volumes:
+      {{- if not .Values.persistence.enabled }}
+        - name: datadir-0
+          emptyDir: {}
+      {{- else if .Values.persistence.existingClaim }}
+        - name: datadir-0
+          persistentVolumeClaim:
+            claimName: {{ printf "%s" (tpl .Values.persistence.existingClaim .) }}
+      {{- end }}
+      {{- if .Values.prometheus.jmx.enabled }}
+        - name: jmx-config
+          configMap:
+            name: {{ template "kafka.fullname" . }}-jmx-configmap
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
+{{- if or (and .Values.persistence.enabled (not .Values.persistence.existingClaim))}}
+  volumeClaimTemplates:
+    {{- $disksPerBroker := .Values.persistence.disksPerBroker | int }}
+    {{- $root := . }}
+    {{- range $k, $e := until $disksPerBroker }}
+    - metadata:
+        name: datadir-{{$k}}
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: "{{ $root.Values.persistence.size }}"
+        {{- if $root.Values.persistence.storageClass }}
+        {{- if (eq "-" $root.Values.persistence.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ $root.Values.persistence.storageClass }}"
+        {{- end }}
+        {{- end }}
+    {{- end }}
+{{- end }}
+
+            
+          
