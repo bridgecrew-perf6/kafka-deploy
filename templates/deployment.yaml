@@ -156,11 +156,11 @@ spec:
             {{- end }}
             {{- if .Values.kafkaQourum.enabled }}
             - name: KAFKA_CONTROLLER_QUORUM_VOTERS
-              value: "{{ .Values.kafkaQourum.brokerId}}@{{include "kafka.kafka-headless.fullname" .}}:9093"
+              value: "{{ .Values.brokerId}}@{{include "kafka.kafka-headless.fullname" .}}:9093"
             - name: KAFKA_CLUSTER_ID
-              values: {{ .Values.kafkaQourum.clusterId}}
+              value: {{ .Values.kafkaQourum.clusterId}}
             - name: KAFKA_BROKER_ID
-              values: {{ .Values.kafkaQourum.brokerId}}
+              value: {{ .Values.brokerId}}
             {{- end }}
             - name: KAFKA_LOG_DIRS
               value: {{ include "kafka.log.dirs" . | quote }}
