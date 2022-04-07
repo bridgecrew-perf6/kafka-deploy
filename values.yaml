@@ -166,6 +166,8 @@ nodeport:
 zookeeper:
   enabled: false
   servers: ""
+  auth:
+    enabled: false
 
 kafkaQourum:
   enabled: false

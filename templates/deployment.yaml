@@ -141,8 +141,8 @@ spec:
               value: {{ .Values.heapOptions }}
             {{- if .Values.zookeeper.enabled }}
             - name: KAFKA_ZOOKEEPER_CONNECT
-              value: {{- toYaml  (join "," .Values.externalZookeeper.servers)}}
-            {{- if and .Values.zookeeper.auth.enabled .Values.auth.sasl.jaas.zookeeperUser }}
+              value: {{  (join "," .Values.zookeeper.servers)}}
+            {{- if .Values.zookeeper.auth.enabled }}
             - name: KAFKA_ZOOKEEPER_PROTOCOL
               value: "SASL"
             - name: KAFKA_ZOOKEEPER_USER

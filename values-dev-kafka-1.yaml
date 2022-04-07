@@ -1,5 +1,6 @@
 brokerId: 1
 
 zookeeper:
-  enabled: false
-  servers: "kafka-zookeeper-headless.kafka:2888"
+  enabled: true
+  servers: 
+    - kafka-zookeeper-headless.kafka:2888
