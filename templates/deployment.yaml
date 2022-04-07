@@ -23,7 +23,7 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/component: kafka
   updateStrategy: 
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml .Values.updateStrategy | nindent 4 }}
   template:
     metadata:
       labels:
@@ -264,6 +264,3 @@ spec:
         {{- end }}
     {{- end }}
 {{- end }}
-
-            
-          
