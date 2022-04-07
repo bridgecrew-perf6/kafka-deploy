@@ -168,7 +168,7 @@ zookeeper:
   servers: ""
 
 kafkaQourum:
-  enabled: true
+  enabled: false
   clusterId: oh-sxaDRTcyAr6pFRbXyzA
 
 diagnosticMode:
