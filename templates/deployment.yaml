@@ -22,8 +22,8 @@ spec:
       app.kubernetes.io/name: {{ include "kafka.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/component: kafka
-  updateStrategy: 
-    {{- toYaml .Values.updateStrategy | nindent 4 }}
+  strategy:
+    {{- toYaml .Values.strategy | nindent 4 }}
   template:
     metadata:
       labels:
