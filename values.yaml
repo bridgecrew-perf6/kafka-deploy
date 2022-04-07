@@ -59,10 +59,12 @@ serviceAccount:
 ## ref: https://kafka.apache.org/documentation/#configuration
 configurationOverrides:
   "offsets.topic.replication.factor": "1"
+  "listeners": |-
+    INTERNAL://:9095,CLIENT://:9092
   "advertised.listeners": |-
-    PLAINTEXT://127.0.0.1:9092
+    INTERNAL:/kafka--1-headless.kafka.svc.clustr.local:9095,CLIENT:/kafka--1-headless.kafka.svc.clustr.local:9092
   "listener.security.protocol.map": |-
-    PLAINTEXT:PLAINTEXT
+    INTERNAL:PLAINTEXT,CLIENT:PLAINTEXT
   # "default.replication.factor": 3
   # "min.insync.replicas": 2
   # "auto.create.topics.enable": false

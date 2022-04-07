@@ -106,6 +106,8 @@ spec:
           ports:
           - containerPort: 9092
             name: kafka
+          - containerPort: 9095
+            name: internal
           {{- if .Values.prometheus.jmx.enabled }}
           - containerPort: {{ .Values.jmx.port }}
             name: jmx

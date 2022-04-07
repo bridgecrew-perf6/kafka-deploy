@@ -11,8 +11,8 @@ spec:
   ports:
     - port: 9092
       name: broker
-    - port: 9093
-      name: quorum
+    - port: 9095
+      name: internal
   clusterIP: None
   selector:
     app: {{ template "kafka.name" . }}
