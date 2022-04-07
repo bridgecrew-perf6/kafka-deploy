@@ -3,4 +3,4 @@ brokerId: 1
 zookeeper:
   enabled: true
   servers: 
-    - kafka-zookeeper-headless.kafka:2888
+    - kafka-zookeeper:2181
