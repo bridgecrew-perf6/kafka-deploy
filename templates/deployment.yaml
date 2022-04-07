@@ -220,6 +220,9 @@ spec:
             - name: datadir-{{$k}}
               mountPath: /opt/kafka/data-{{$k}}
             {{- end }}
+          {{- else }}
+            - name: datadir-0
+              mountPath: /opt/kafka/data-0
           {{- end }}
       volumes:
       {{- if not .Values.persistence.enabled }}
