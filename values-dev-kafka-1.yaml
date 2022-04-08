@@ -1,5 +1,13 @@
 brokerId: 1
 
+listenerConfiguration: 
+  "listeners": |-
+    INTERNAL://:9095,CLIENT://:9092
+  "advertised.listeners": |-
+    INTERNAL://kafka-1-headless.kafka.svc.cluster.local:9095,CLIENT://kafka-1-headless.kafka.svc.cluster.local:9092
+  "listener.security.protocol.map": |-
+    INTERNAL:PLAINTEXT,CLIENT:PLAINTEXT
+  "inter.broker.listener.name": "INTERNAL"
 zookeeper:
   enabled: true
   servers: 
