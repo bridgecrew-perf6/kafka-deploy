@@ -63,6 +63,24 @@ Create a variable containing all the datadirs created.
 {{- end -}}
 
 {{/*
+Standard labels
+*/}}
+{{- define "kafka.labels.standard" -}}
+app.kubernetes.io/name: {{ template "kafka.name" . }}
+helm.sh/chart: {{ template "kafka.chart" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
+{{/*
+Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
+*/}}
+{{- define "kafka.labels.matchLabels" -}}
+app.kubernetes.io/name: {{ template "kafka.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{/*
 Renders a value that contains template.
 Usage:
 {{ include "tplvalues.render" ( dict "value" .Values.path.to.the.Value "context" $) }}

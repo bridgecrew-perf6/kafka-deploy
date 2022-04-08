@@ -2,11 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ template "kafka.fullname" . }}-headless
-  labels:
-    app: {{ template "kafka.name" . }}
-    chart: {{ template "kafka.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+  labels: {{- include "kafka.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
 spec:
   ports:
     - port: 9092
@@ -14,6 +11,5 @@ spec:
     - port: 9095
       name: internal
   clusterIP: None
-  selector:
-    app: {{ template "kafka.name" . }}
-    release: {{ .Release.Name }}
+  selector: {{- include "kafka.labels.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
