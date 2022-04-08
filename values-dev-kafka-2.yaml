@@ -1,0 +1,6 @@
+brokerId: 2
+
+zookeeper:
+  enabled: true
+  servers: 
+    - kafka-zookeeper:2181
