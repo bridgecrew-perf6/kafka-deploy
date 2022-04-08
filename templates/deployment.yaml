@@ -190,21 +190,21 @@ spec:
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe: {{ toYaml (omit .Values.livenessProbe "enabled") | nindent 12 }}
             tcpSocket:
-              port: kafka-client
+              port: internal
           {{- else if .Values.customLivenessProbe }}
           livenessProbe: {{ toYaml .Values.customLivenessProbe | nindent 12 }}}
           {{- end }}
           {{- if .Values.readinessProbe.enabled }}
           readinessProbe: {{ toYaml (omit .Values.readinessProbe "enabled") | nindent 12 }}
             tcpSocket:
-              port: kafka
+              port: internal
           {{- else if .Values.customReadinessProbe }}
           readinessProbe: {{ toYaml .Values.customReadinessProbe | nindent 12 }}}
           {{- end }}
           {{- if .Values.startupProbe.enabled }}
           startupProbe: {{ toYaml (omit .Values.startupProbe "enabled") | nindent 12 }}
             tcpSocket:
-              port: kafka
+              port: internal
           {{- else if .Values.customStartupProbe }}
           startupProbe: {{ toYaml .Values.customStartupProbe | nindent 12 }}}
           {{- end }}
