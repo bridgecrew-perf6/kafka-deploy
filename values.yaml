@@ -65,6 +65,7 @@ configurationOverrides:
     INTERNAL://kafka-1-headless.kafka.svc.cluster.local:9095,CLIENT://kafka-1-headless.kafka.svc.cluster.local:9092
   "listener.security.protocol.map": |-
     INTERNAL:PLAINTEXT,CLIENT:PLAINTEXT
+  "inter.broker.listener.name": "INTERNAL"
   # "default.replication.factor": 3
   # "min.insync.replicas": 2
   # "auto.create.topics.enable": false
