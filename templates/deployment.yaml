@@ -26,6 +26,7 @@ spec:
   template:
     metadata:
       labels: {{- include "kafka.labels.standard" $ | nindent 8 }}
+        app.kubernetes.io/name: {{ template "kafka.name" $ }}-{{ $broker.id }}
         app.kubernetes.io/component: kafka
     annotations:
     {{- range $key, $value := $.Values.podAnnotations }}
