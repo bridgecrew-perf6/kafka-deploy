@@ -1,4 +1,5 @@
 {{- range $broker := $.Values.brokers}}
+---
 {{- if $.Capabilities.APIVersions.Has "apps/v1" }}
 apiVersion: apps/v1
 {{- else }}

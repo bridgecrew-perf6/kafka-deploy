@@ -1,4 +1,5 @@
 {{- range $broker := $.Values.brokers}}
+---
 apiVersion: v1
 kind: Service
 metadata:
