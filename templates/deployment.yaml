@@ -14,7 +14,7 @@ metadata:
   {{- range $key, $value := $.Values.annotations }}
     {{ $key | quote }}: {{ $value | quote }}
   {{- end }}
-  argocd.argoproj.io/sync-wave: "{{ $broker.id }}"
+    argocd.argoproj.io/sync-wave: "{{ $broker.id }}"
 spec:
   replicas: 1
   selector:
