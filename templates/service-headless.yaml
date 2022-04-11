@@ -1,15 +1,19 @@
+{{- range $broker := $.Values.brokers}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "kafka.fullname" . }}-headless
-  labels: {{- include "kafka.labels.standard" . | nindent 4 }}
+  name: {{ template "kafka.fullname" $ }}-{{ $broker.id }}-headless
+  labels: {{- include "kafka.labels.standard" $ | nindent 4 }}
+    app.kubernetes.io/name: {{ template "kafka.name" $ }}-{{ $broker.id }}
     app.kubernetes.io/component: kafka
 spec:
   ports:
-    - port: 9092
-      name: broker
-    - port: 9095
-      name: internal
+  {{- range $listenerPort := $.Values.listenerPorts }}
+    - port: {{ $listenerPort.port }}
+      name: {{ $listenerPort.name }}
+  {{- end }}
   clusterIP: None
-  selector: {{- include "kafka.labels.matchLabels" . | nindent 4 }}
+  selector: {{- include "kafka.labels.matchLabels" $ | nindent 4 }}
+    app.kubernetes.io/name: {{ template "kafka.name" $ }}-{{ $broker.id }}
     app.kubernetes.io/component: kafka
+{{- end }}

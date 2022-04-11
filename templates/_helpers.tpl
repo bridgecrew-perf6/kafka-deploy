@@ -66,7 +66,6 @@ Create a variable containing all the datadirs created.
 Standard labels
 */}}
 {{- define "kafka.labels.standard" -}}
-app.kubernetes.io/name: {{ template "kafka.name" . }}
 helm.sh/chart: {{ template "kafka.chart" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
@@ -76,7 +75,6 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
 */}}
 {{- define "kafka.labels.matchLabels" -}}
-app.kubernetes.io/name: {{ template "kafka.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 

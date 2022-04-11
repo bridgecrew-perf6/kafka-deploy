@@ -1,16 +1,22 @@
+{{- range $broker := $.Values.brokers}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "kafka.fullname" . }}
-  labels: {{- include "kafka.labels.standard" . | nindent 4 }}
+  name: {{ template "kafka.fullname" $ }}-{{ $broker.id }}
+  labels: {{- include "kafka.labels.standard" $ | nindent 4 }}
+    app.kubernetes.io/name: {{ template "kafka.name" $ }}-{{ $broker.id }}
     app.kubernetes.io/component: kafka
 spec:
   ports:
-    - port: 9092
-      name: broker
-    {{- if .Values.prometheus.jmx.enabled }}
-    - port: {{ .Values.prometheus.jmx.port }}
+    {{- range $listenerPort := $.Values.listenerPorts }}
+    - port: {{ $listenerPort.port }}
+      name: {{ $listenerPort.name }}
+    {{- end }}
+    {{- if $.Values.prometheus.jmx.enabled }}
+    - port: {{ $.Values.prometheus.jmx.port }}
       name: metrics
     {{- end }}
-  selector: {{- include "kafka.labels.matchLabels" . | nindent 4 }}
+  selector: {{- include "kafka.labels.matchLabels" $ | nindent 4 }}
+    app.kubernetes.io/name: {{ template "kafka.name" $ }}-{{ $broker.id }}
     app.kubernetes.io/component: kafka
+{{- end }}
