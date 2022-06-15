@@ -1,13 +1,6 @@
-# Default values for kafka.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
 ## ------------------------------------------------------
 ## Kafka
 ## ------------------------------------------------------
-
-## Number of Kafka brokers
-brokers: 1
 
 ## Image Info
 ## ref: https://hub.docker.com/r/confluentinc/cp-server/
@@ -25,19 +18,20 @@ imagePullSecrets:
 
 ## The Deployment Update Strategy which Kafka will use when changes are applied: OnDelete or RollingUpdate
 ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
-strategy: 
+strategy:
   type: Recreate
 
 # Security Context
 # ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 # for Kafka container
-securityContext: {}
+securityContext:
+  {}
   #  runAsUser: 1000
   #  runAsGroup: 1000
 
-## ServiceAccount for Kafka
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-##
+# ServiceAccount for Kafka
+# ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+#
 serviceAccount:
   ## @param serviceAccount.create Enable creation of ServiceAccount for Kafka pods
   ##
@@ -53,7 +47,6 @@ serviceAccount:
   ## @param serviceAccount.annotations Additional custom annotations for the ServiceAccount
   ##
   annotations: {}
-
 
 ## Kafka Server properties
 ## ref: https://kafka.apache.org/documentation/#configuration
@@ -76,14 +69,15 @@ configurationOverrides:
   #  PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
 
 ## Additional env variables
-customEnv: {}
+customEnv:
+  {}
   # KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
   # CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "localhost:9092"
 
 persistence:
   enabled: false
 
-  # existingClaim: 
+  # existingClaim:
 
   ## The size of the PersistentVolume to allocate to each Kafka Pod in the StatefulSet. For
   ## production servers this number should likely be much larger.
@@ -103,7 +97,8 @@ persistence:
 ## Kafka JVM Heap Option
 heapOptions: "-Xms512M -Xmx512M"
 
-resources: {}
+resources:
+  {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -162,8 +157,9 @@ nodeport:
 ## If enabled zookeeper will be used for leader election otherwise Kafka Qourum should be enabled
 ## ------------------------------------------------------
 zookeeper:
-  enabled: false
-  servers: ""
+  enabled: true
+  servers:
+    - kafka-zookeeper:2181
   auth:
     enabled: false
 
@@ -197,9 +193,11 @@ livenessProbe:
   enabled: true
   initialDelaySeconds: 10
   timeoutSeconds: 5
-  failureThreshold: 3
+  failureThreshold: 4
   periodSeconds: 10
   successThreshold: 1
+  tcpSocket:
+    port: internal
 ## @param readinessProbe.enabled Enable readinessProbe on Kafka containers
 ## @param readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
 ## @param readinessProbe.periodSeconds Period seconds for readinessProbe
@@ -214,6 +212,8 @@ readinessProbe:
   timeoutSeconds: 5
   periodSeconds: 10
   successThreshold: 1
+  tcpSocket:
+    port: internal
 ## @param startupProbe.enabled Enable startupProbe on Kafka containers
 ## @param startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
 ## @param startupProbe.periodSeconds Period seconds for startupProbe
@@ -228,6 +228,8 @@ startupProbe:
   timeoutSeconds: 1
   failureThreshold: 15
   successThreshold: 1
+  tcpSocket:
+    port: internal
 ## @param customLivenessProbe Custom livenessProbe that overrides the default one
 ##
 customLivenessProbe: {}
@@ -240,4 +242,3 @@ customStartupProbe: {}
 ## @param lifecycleHooks lifecycleHooks for the Kafka container to automate configuration before or after startup
 ##
 lifecycleHooks: {}
-
